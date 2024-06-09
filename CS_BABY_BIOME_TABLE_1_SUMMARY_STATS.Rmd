@@ -1,0 +1,275 @@
+---
+title: "CS_BABY_BIOME_Table_1_summary_statistics_phenotypes"
+author: "Trishla Sinha"
+date: "2/27/2023"
+lastupdate:"09/06/2023"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r Load packages, echo=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(ggpubr)
+
+
+```
+
+```{r PHENOTYPE ANALYSIS, echo=FALSE}
+metadata<-read.delim("~/Desktop/CS_Baby_Biome/OLD_ANALYSIS/EGA/Metadata_EGA_CS_BABY_BIOME.txt")
+metadata[sapply(metadata, is.character)] <- lapply(metadata[sapply(metadata, is.character)],  #convert character columns to factors
+                                                   as.factor)
+metadata_infants<-metadata %>% drop_na(Timepoint_numeric) # Only infant metadata
+for_table_1<-metadata_infants[!duplicated(metadata_infants$CS_BABY_BIOME_ID), ]
+#summary<-st(for_table_1, group = 'Randomization_AB_all', group.test = TRUE, out = "csv", file = "summary_stats_metadata_CS_Baby_Biome")
+#write.table(summary, "summary_stats_table_1_CS_BABY_BIOME.txt", sep="\t", row.names=F, quote = F)
+
+for_table_1_with_AB<-for_table_1[for_table_1$rand_AB=="Yes",]
+for_table_1_no_AB<-for_table_1[for_table_1$rand_AB=="No",]
+
+summary_statistics_metadata <- function (metadata_input, category_table) {
+  # Packages needed
+  library (psych)  #describe r function
+  # Create other functions to calculate the different parameters
+  ## Categorical values - create function to calculate the counts and the percentage for categorical variables
+  tblFun <- function(x) {
+    # Create a table
+    tbl <- table(x)
+    # Combine columnes/rows to get the counts and percentage (creates new table -> res)
+    res <- cbind(tbl,round(prop.table(tbl)*100,2))
+    # Give names to the columns
+    colnames(res) <- c('Count','Percentage')
+    res
+  }
+  ## NA sum function - counts the number of NA
+  nzsum <- function(x) {
+    sum (is.na(x))
+  }
+  if (missing(category_table)) {
+    ## Calculate table1 with the whole data:
+    my_results = matrix(ncol = 9, nrow = ncol(metadata_input))
+    for (k in 1:ncol(metadata_input)){
+      if (is.numeric(metadata_input[,k])) {
+        # Keep in "x" the result from describe function (done in the columns) - for each factor
+        x = describe(metadata_input[,k])
+        z = nzsum(metadata_input[,k])
+        # In the new table ("x"): keep different values in the different columns
+        my_results[k,1] = "numerical"
+        my_results[k,2] = x$median
+        my_results[k,3] = x$mean
+        my_results[k,4] = x$sd
+        my_results[k,5] = x$n
+        my_results[k,6] = z
+        my_results[k,7] = x$min
+        my_results[k,8] = x$max
+        my_results[k,9] = x$range
+      }
+      # Condition: if the column values are categorical
+      else {
+        # Keep in "x" the result from tblFun function (done in the columns) - for each factor
+        x = tblFun(metadata_input[,k])
+        z = nzsum(metadata_input[,k])
+        # In the new table ("x"): keep different values in the different columns
+        my_results[k,1]="categorical"
+        # toString to keep the possible different values/categories in the same vector/column
+        my_results[k,2]=toString(rownames(x))
+        # First column table x = 'Count'
+        my_results[k,3]=toString(x[,1])
+        # Second column table x = 'Percentage'
+        my_results[k,4]=toString(x[,2])
+        # Sum of the values on column1 ("x")
+        my_results[k,5]=sum(x[,1])
+        my_results[k,6]= z
+        my_results[k,7] = NA
+        my_results[k,8] = NA
+        my_results[k,9] = NA
+      }
+    }
+    # The column names from the original table = row names from the new table
+    rownames(my_results) = colnames(metadata_input)
+    # Give names to the columns of the new table
+    colnames(my_results) = c("Type", "Categories/Median", "Counts/Mean", "%/SD", "Number_non_zeros", "Number_NA",
+                             "Min", "Max", "Range")
+    # Export the new table
+    write.table (my_results, file = "./meta_data_summary_stats.txt" , quote = F, sep = "\t")
+  }
+}
+
+# Generating summary stats for both groups
+summary_statistics_metadata (for_table_1_with_AB)
+summary_statistics_metadata (for_table_1_no_AB)
+# These two files were then merged to create Table 1
+
+# Testing p values for metadata file, for each comparison a different test was used based on the nature of the varaible 
+
+#Cefazoline
+ggdensity(for_table_1_with_AB$cefazoline_measurement_mg_L, 
+          main = "Density plot ofCefazoline_measurement_new",
+          xlab = "Cefzol")
+ggqqplot(for_table_1_with_AB$cefazoline_measurement_mg_L) # Normal
+shapiro.test(for_table_1_with_AB$cefazoline_measurement_mg_L) # Distribution of data not significantly different from normal distribution 
+t.test(for_table_1$cefazoline_measurement_mg_L~for_table_1$rand_AB)
+
+
+# BMI beginning of pregnancy
+
+ggdensity(for_table_1$pre_preg_bmi_mother, 
+          main = "Density plot of BMI pre pregnancy",
+          xlab = "BMI")
+ggqqplot(for_table_1$pre_preg_bmi_mother) # Normal
+shapiro.test(for_table_1$pre_preg_bmi_mother) # Distribution of data not significantly different from normal distribution 
+
+t.test(for_table_1$pre_preg_bmi_mother~for_table_1$rand_AB)
+wilcox.test(for_table_1$pre_preg_bmi_mother~for_table_1$rand_AB)
+
+# Weight gain during pregnancy
+
+ggdensity(for_table_1$preg_weight_gain, 
+          main = "Density plot of preg weight gain ",
+          xlab = "Weight")
+ggqqplot(for_table_1$preg_weight_gain) # Normal
+shapiro.test(for_table_1$preg_weight_gain) # Distribution of data not significantly different from normal distribution 
+
+t.test(for_table_1$preg_weight_gain~for_table_1$rand_AB)
+#wilcox.test(for_table_1$preg_weight_gain~for_table_1$rand_AB)
+
+
+# Gestational age
+
+ggdensity(for_table_1$preg_gest_age, 
+          main = "Density plot of gestational age ",
+          xlab = "gestational age")
+ggqqplot(for_table_1$preg_gest_age) # Not normal 
+shapiro.test(for_table_1$preg_gest_age) # Distribution of data significantly different from normal distribution 
+
+#t.test(for_table_1$preg_gest_age~for_table_1$rand_AB)
+wilcox.test(for_table_1$preg_gest_age~for_table_1$rand_AB)
+
+# Gravida
+
+ggdensity(for_table_1$gravida, 
+          main = "Density plot of gravida ",
+          xlab = "gravida")
+ggqqplot(for_table_1$gravida) # Not normal 
+shapiro.test(for_table_1$gravida) # Distribution of data significantly different from normal distribution 
+#t.test(for_table_1$gravida~for_table_1$rand_AB)
+wilcox.test(for_table_1$gravida~for_table_1$rand_AB)
+
+# Para
+
+ggdensity(for_table_1$para, 
+          main = "Density plot of para ",
+          xlab = "para")
+ggqqplot(for_table_1$para) # Not normal 
+shapiro.test(for_table_1$para) # Distribution of data significantly different from normal distribution 
+
+#t.test(for_table_1$gravida~for_table_1$rand_AB)
+wilcox.test(for_table_1$para~for_table_1$rand_AB)
+
+table(for_table_1$infant_sex, for_table_1$rand_AB)
+fisher.test(table(for_table_1$infant_sex, for_table_1$rand_AB))
+
+# Birthweight 
+
+ggdensity(for_table_1$infant_birthweight, 
+          main = "Density plot of birthweight ",
+          xlab = "birthweight")
+ggqqplot(for_table_1$infant_birthweight) # Normal 
+shapiro.test(for_table_1$infant_birthweight) # Distribution of data not significantly different from normal distribution 
+
+t.test(for_table_1$infant_birthweight~ for_table_1$rand_AB)
+#wilcox.test(for_table_1$infant_birthweight~for_table_1$rand_AB)
+
+# Maternal age 
+
+ggdensity(for_table_1$mother_age_at_delivery, 
+          main = "Density plot of age at delivery",
+          xlab = "age at delivery ")
+ggqqplot(for_table_1$mother_age_at_delivery) # Normal 
+shapiro.test(for_table_1$mother_age_at_delivery)# Distribution of data not significantly different from normal distribution 
+
+t.test(for_table_1$mother_age_at_delivery~ for_table_1$rand_AB)
+#wilcox.test(for_table_1$infant_birthweight~for_table_1$rand_AB)
+
+# APGAR 1
+ggdensity(for_table_1$APGAR_1, 
+          main = "Density plot of APGAR 1",
+          xlab = "age at APGAR 1 ")
+ggqqplot(for_table_1$APGAR_1) # DEFINITELY NOT NORMAL
+shapiro.test(for_table_1$APGAR_1) # DEFINITELY NOT NORMAL
+wilcox.test(for_table_1$APGAR_1~for_table_1$rand_AB)
+
+# APGAR 5
+ggdensity(for_table_1$APGAR_5, 
+          main = "Density plot of APGAR 5",
+          xlab = "age at APGAR 5")
+ggqqplot(for_table_1$APGAR_5) # DEFINITELY NOT NORMAL
+shapiro.test(for_table_1$APGAR_5) # DEFINITELY NOT NORMAL
+
+wilcox.test(for_table_1$APGAR_5~for_table_1$rand_AB)
+
+# Testing all the categorical variables 
+
+table(for_table_1$feeding_mode_pragmatic, for_table_1$rand_AB)
+fisher.test(table(for_table_1$feeding_mode_pragmatic, for_table_1$rand_AB))
+chisq.test(for_table_1$feeding_mode_pragmatic, for_table_1$rand_AB)
+
+table(for_table_1$living_situation, for_table_1$rand_AB)
+fisher.test(table(for_table_1$living_situation, for_table_1$rand_AB))
+
+table(for_table_1$cats_dogs, for_table_1$rand_AB)
+fisher.test(table(for_table_1$cats_dogs, for_table_1$rand_AB))
+
+table(for_table_1$growth_p_limited, for_table_1$rand_AB)
+fisher.test(table(for_table_1$growth_p_limited, for_table_1$rand_AB))
+
+
+# Table 1 package i R 
+
+# Testing all the technical variables 
+
+# DNA concentration
+
+ggdensity(metadata_infants$DNA_concentration_ng_ul, 
+          main = "Density plot of DNA_concentration_ng_ul",
+          xlab = "DNA CONC")
+ggqqplot(metadata_infants$DNA_concentration_ng_ul) # Not normal 
+shapiro.test(metadata_infants$DNA_concentration_ng_ul) # Distribution of data significantly different from normal distribution 
+wilcox.test(metadata_infants$DNA_concentration_ng_ul~metadata_infants$rand_AB)
+metadata_infants %>% 
+   group_by(rand_AB) %>%
+  summarize(Median = median(DNA_concentration_ng_ul, na.rm=TRUE))
+ # summarize(Min = min(DNA_concentration_ng_ul, na.rm=TRUE))
+ # summarize(Max = max(DNA_concentration_ng_ul, na.rm=TRUE))
+
+# Read depth 
+  
+ggdensity(metadata_infants$read_depth, 
+          main = "Density plot of RD ",
+          xlab = "RD")
+ggqqplot(metadata_infants$read_depth) # Not normal 
+shapiro.test(metadata_infants$read_depth) # Distribution of data significantly different from normal distribution 
+wilcox.test(metadata_infants$read_depth~metadata_infants$rand_AB)
+metadata_infants %>% 
+   group_by(rand_AB) %>%
+ # summarize(Median = median(read_depth, na.rm=TRUE))
+ # summarize(Min = min(read_depth, na.rm=TRUE))
+  summarize(Max = max(read_depth, na.rm=TRUE))
+
+```
+
+Summary stats of the early timepoints feeidng mode 
+
+```{r PHENOTYPE ANALYSIS, echo=FALSE}
+
+metadata<-read.delim("~/Desktop/CS_Baby_Biome/ANALYSIS/METADATA_INFANTS_EARLY_CS_BABY_BIOME_09_06_2023_UPDATED_FEEDING.txt")
+for_table_1<-metadata
+for_table_1 = for_table_1[!duplicated(for_table_1$CS_BABY_BIOME_ID),]
+table(for_table_1$feeding_mode_pragmatic, for_table_1$rand_AB)
+fisher.test(table(for_table_1$feeding_mode_pragmatic, for_table_1$rand_AB))
+chisq.test(for_table_1$feeding_mode_pragmatic, for_table_1$rand_AB)
+
+
+```
