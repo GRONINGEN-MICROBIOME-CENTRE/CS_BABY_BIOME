@@ -235,9 +235,6 @@ combined_plot <- p1/p2 / p3
 
 combined_plot
 
-# Save as A4 
-#8.3 x 11.7
-
 
 
 
