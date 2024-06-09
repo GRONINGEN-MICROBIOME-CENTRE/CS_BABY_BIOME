@@ -1,4 +1,5 @@
-# function to estimate power for linear regresison with binary predictor
+# Function to estimate power for linear regresison with binary predictor
+
 #beta: your coefficient from regression
 #Y.sd: standard deviation of your outcome
 # proportion.cases: ratio between number of cases and total number of samples
