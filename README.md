@@ -1,9 +1,7 @@
 # CS BABY BIOME
-#### Author: **Trishla Sinha**
-#### Description: The scripts in this folder describes all the codes for the upstream, downstream and statistical analysis for the randomized clinical trial CS BABY BIOME
 
-The study protocol (CCMO: NL61493.042.17) was approved by the medical ethics committee of the University Medical Center Groningen (2017/240).  It is registered at ClinicalTrials.gov with ID:   NCT06030713
-
+Author: **Trishla Sinha**
+Description: The scripts in this folder describes all the codes for the upstream, downstream and statistical analysis for the randomized clinical trial CS BABY BIOME. The study protocol (CCMO: NL61493.042.17) was approved by the medical ethics committee of the University Medical Center Groningen (2017/240).  It is registered at ClinicalTrials.gov with ID:   NCT06030713
 
 Brief summary: In this study, investigators seek to determine whether the timing of antibiotics given to mothers during an elective C-section affects the composition of their infant's gut microbiome. To do this, a randomized controlled trial (RCT) was carried out with women undergoing elective C-sections. These women were either given antibiotics before the skin incision (AB+) or after the umbilical cord was clamped (AB-).
 
