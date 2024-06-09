@@ -4,7 +4,7 @@ Adapted from Biobakery (StrainPhlAn 4.0).
 https://github.com/biobakery/MetaPhlAn/wiki/StrainPhlAn-4
 
 Authors: Trishla Sinha.
-Description: The script shows how strain profiling was performed using Strainphlan 4 for all maternal and infant samples post QC, for all species.   
+Description: The script shows how strain profiling was performed using Strainphlan 4 
 Languages: Bash and R.   
 
 ## Step 1: Reconstruct all species strains
@@ -174,100 +174,3 @@ for i in $(cat CS_Baby_Biome_clade_names_Oct_2022_db.txt); do sbatch sp4_runMark
 ```
 Where CS_BABY_BIOME_clades_names.txt contains a list of names of all (sub) species identified in the previous step 
 This will perform MSA and create .tre files and .aln files for each of the (sub)species you feed it in 
-
-
-
-
-## Step 4: Make distance matrix from MSA file (makeDistMatAll.sh)
-
-```
-#!/bin/bash
-echo "maker of distance matrices"
-echo " > goes through each folder and attempts to make distmat"
-
-echo " > loading EMBOSS"
-ml Anaconda3
-source activate /home2/hb-llnext/EMBOSS_conda/ 
-for F in */
-do
-   SN=${F/\/}
-   echo ${SN}
-   FM=${SN}.StrainPhlAn4_concatenated.aln
-   echo "  >> making distmat"
-   echo "distmat -sequence ${SN}/${FM} -nucmethod 2 -outfile ${SN}/${SN}.dmat"
-distmat -sequence ${SN}/${FM} -nucmethod 2 -outfile ${SN}/${SN}.dmat
-done   
- 
-# Creates a distance matrix from a multiple sequence alignment using the EMBOSS package (https://www.bioinformatics.nl/cgi-bin/emboss/help/distmat) 
-# distmat calculates the evolutionary distance between every pair of sequences in a multiple sequence alignment.
-# Uses Kimura Two-Parameter distance (distances expressed in terms of the number of substitutions per 100 b.p or amino acids) 
-
-
-
-```
-### Execution
-
-```
-sbatch makeDistMatAll.sh 
-
-```
-
-## Step 5: Cleaning the distance matrix from MSA file 
-
-First, load RPlus
-```
-ml RPlus 
-```
-
-#Example: Rscript parseDMat_LLNext.R s__Bifidobacterium_bifidum.dmat
-```
-for i in $(find . -type f -name *.dmat); do Rscript parseDMAT.R $i; done 
-```
-#parseDMAT.R consists of: 
-```
-library(optparse)
-# CL PARSER
-help_description <- ""
-args <- OptionParser(usage = "%prog clade.distmat.txt metadata.txt ordination.png",
-                      add_help_option = TRUE, prog='strainphlan_ordination.R',
-                      description=help_description )
-args_list <- parse_args(args, positional_arguments=TRUE)
-
-# read in the file, skipping the first 8 rows and filling in empty columns, using the tab as sep, and stripping extra white space
-inFile <- args_list$args[1]
-data <- read.table( inFile, skip = 8, fill = TRUE, sep="\t", strip.white = T)
-
-# remove the first column of the data as it is blank
-data[1] <- NULL
-
-# get the header as the last column of the data as a character vector
-header <- lapply(data[,ncol(data)], as.character)
-
-# remove the last column from the data as it has been stored as a header
-data[ncol(data)] <- NULL
-
-# remove the current last column from the data as it is blank
-data[ncol(data)] <- NULL
-
-# split header by space and digit to get the sample names
-samples <- unlist(header)
-# fix metaphlan just by taking only first 3 thingies after _ split
-ss <- c()
-sNR <- 0
-for (s in samples) {
-   sNR <- sNR + 1
-   ssplit = strsplit(s,' ')
-   ss <- c(ss,ssplit[[1]][1])
-}
-
-# add the sample names to the columns and rows of the data matrix
-rownames(data) <- ss
-colnames(data) <- ss
-
-# make symmetric, add lower triangle to upper triangle
-data[lower.tri(data)] <- t(data)[lower.tri(data)]
-
-# save it
-write.table(data,paste0(gsub('\\.dmat','',inFile),'_dmat_Rready.csv'),sep=',',row.names=T)
-
-```
