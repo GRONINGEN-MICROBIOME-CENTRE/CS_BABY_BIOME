@@ -27,7 +27,7 @@ plasmid_origin$
 # Replace the IDs in the FASTA file with the new simplified IDs
 names(plasmid_sequences) <- plasmid_origin$new_ID
 
-# Save final table with the X sequences used as input for STEP5 dereplication and their DB of origin (including 5 NEG-CONTROLS)
+# Save final table with the X sequences used as input for dereplication and their DB of origin 
 write.table(plasmid_origin,"Renamed_plasmids.txt", sep = "\t", 
             row.names = F, col.names = F, quote = FALSE)
 
