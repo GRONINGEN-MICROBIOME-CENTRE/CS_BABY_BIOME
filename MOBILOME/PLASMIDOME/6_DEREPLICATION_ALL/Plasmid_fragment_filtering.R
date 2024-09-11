@@ -2,7 +2,7 @@
 args <- commandArgs(trailingOnly = TRUE)
 clusters <- read.delim(args[1], sep = ",", header = F)
 
-# Het a vector of plasmid fragment names
+# Get a vector of plasmid fragment names
 fragments <- as.vector(grep("fragment", unlist(clusters), value = T))
 
 # Save list of plasmid fragments to remove
