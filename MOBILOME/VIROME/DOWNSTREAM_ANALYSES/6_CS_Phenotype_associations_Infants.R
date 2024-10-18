@@ -222,6 +222,12 @@ Abundance_table_infants_log <- Abundance_table_infants
 Abundance_table_infants_log[Abundance_table_infants_log  == 0] <- pseudocount_vOTU
 Abundance_table_infants_log <- log(Abundance_table_infants_log)
 
+# Remove the vOTUs that are not prevalent
+Abundance_table_infants_log_filtered <- as.data.frame(Abundance_table_infants_log[, vOTU_keep])
+
+# Order abundance table according to Sample metadata
+Abundance_table_infants_log_filtered <- Abundance_table_infants_log_filtered[match(Sample_metadata_infants$bioSampleId,
+                                                                                       rownames(Abundance_table_infants_log_filtered)), ]
 
 ##************************************************************************
 # 2. Association analysis - Infants: vOTU abundances vs phenotypes
