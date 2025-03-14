@@ -1,7 +1,7 @@
 ################################################################################
 ##### CS Baby Biome: vOTU AMR analysis - associations
 ### Author(s): Asier Fernández-Pato
-### Last updated: 28th June, 2024
+### Last updated: 18th February, 2025
 ################################################################################
 
 # Set working directory 
@@ -100,6 +100,10 @@ sum(Virus_metadata_infants$AMR_genes)
 
 # Estimate number of different AMR genes found in infant vOTUs
 length(colSums(AMR_Gene_abundance)[colSums(AMR_Gene_abundance) != 0])
+
+# Check the viral lifestyle and bacterial host of phages with AMRs
+Virus_metadata_infants$Lifestyle[Virus_metadata_infants$AMR_genes >0]
+Virus_metadata_infants$Bacterial_genus_host[Virus_metadata_infants$AMR_genes >0]
 
 # Estimate AMR gene content (proportion) infant gut phages
 sum(Virus_metadata_infants$AMR_genes) / sum(Virus_metadata_infants$n_genes)

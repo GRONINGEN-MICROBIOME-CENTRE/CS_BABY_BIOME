@@ -61,6 +61,16 @@ estimate_origin <- function(tax_level, clusters, databases) {
   return(results)
 }
 
+# Function to find the cluster representative for a given Virus_ID
+find_cluster <- function(virus_id, cluster_matrix) {
+  row_index <- which(cluster_matrix == virus_id, arr.ind = TRUE)
+  if (nrow(row_index) > 0) {
+    return(cluster_matrix[row_index[1, 1], 1])  
+  } else {
+    return(NA)  
+  }
+}
+
 # Function to generate combination of DBs for Upset plot
 generate_DB_combinations <- function(databases, prefix = "", index = 1) {
   combinations <- c()
@@ -324,12 +334,18 @@ Virus_metadata$DGR <- ifelse(Virus_metadata$Virus_ID %in% DGR_results$Contig, "Y
 #J. Genus and family-level clustering
 #**********************************
 
-#A) All vOTUs 
 # Load the genus_clusters.txt and family_clusters.txt files
 genus_clusters <- read.delim("1_GENERAL_STATISTICS_AND_METADATA/All viruses/genus_clusters.txt", header = F)
 family_clusters <- read.delim("1_GENERAL_STATISTICS_AND_METADATA/All viruses/family_clusters.txt", header = F)
 
-# Estimate the origin of genomes from each vOTU at genus and family-level (vOTU_DB_composition extended)
+# A) Add genus and family-level cluster information to metadata
+family_clusters_matrix <- as.matrix(family_clusters)
+genus_clusters_matrix <- as.matrix(genus_clusters)
+
+Virus_metadata$Family_cluster <- sapply(Virus_metadata$Virus_ID, function(id) find_cluster(id, family_clusters_matrix))
+Virus_metadata$Genus_cluster <- sapply(Virus_metadata$Virus_ID, function(id) find_cluster(id, genus_clusters_matrix))
+
+# B) Estimate the origin of genomes from each vOTU at genus and family-level (vOTU_DB_composition extended)
 results_genus_level <- estimate_origin("genus", genus_clusters, databases)
 results_family_level <- estimate_origin("family", family_clusters, databases)
 

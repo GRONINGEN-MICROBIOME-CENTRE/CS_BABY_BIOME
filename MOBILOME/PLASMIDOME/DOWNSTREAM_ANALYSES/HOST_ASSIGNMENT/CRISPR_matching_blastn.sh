@@ -6,7 +6,7 @@
 #SBATCH --cpus-per-task=32
 #SBATCH --export=NONE
 #SBATCH --open-mode=truncate
-#SBATCH --partition=regular
+#SBATCH --partition=himem
 
 CRISPR_spacers=$1 # path to FASTA file with CRISPR spacers
 plasmids=$2 #path to FASTA file with PTU representative genomes
@@ -14,7 +14,7 @@ plasmids=$2 #path to FASTA file with PTU representative genomes
 mkdir -p CRISPR_DB
 
 # Load BLAST
-module purge; ml BLAST+/2.13.0-gompi-2022a; ml list
+module purge; ml BLAST+/2.13.0-gompi-2022a SeqKit; ml list
 
 #First, create a blast+ database:
 makeblastdb \
@@ -32,3 +32,7 @@ blastn \
 	-dust no \
 	-out PTU_crispr_results.tsv \
 	-num_threads ${SLURM_CPUS_PER_TASK}
+
+# Estimate length of CRISPR spacers 
+seqkit fx2tab --length $CRISPR_spacers | cut -f 1,4 > CRISPR_length.tsv
+

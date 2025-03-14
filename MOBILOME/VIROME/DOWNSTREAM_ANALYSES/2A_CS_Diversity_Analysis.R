@@ -1,7 +1,7 @@
 ################################################################################
 ##### CS Baby Biome: vOTU diversity, specificity and persistence analysis
 ### Author(s):Asier Fernández-Pato
-### Last updated: 6th June, 2024
+### Last updated: 20th February, 2025
 ################################################################################
 
 #****************
@@ -188,6 +188,108 @@ ggscatter(Sample_metadata, x = "shannon", y = "read_depth",
         legend.position = "none") 
 dev.off()
 
+##################################
+# 2.1.2. Eukaryotic vs prokaryotic viruses: alpha diversity and richness 
+##################################
+Eukaryotic_vOTUs <- Virus_metadata$Virus_ID[Virus_metadata$Phylum=="Cressdnaviricota"]
+Prokaryotic_vOTUs <-Virus_metadata$Virus_ID[!Virus_metadata$Phylum=="Cressdnaviricota"]
+  
+# Generate separate abundance tables for prokaryotic and eukaryotic viruses separately
+Abundance_table_euk <- Abundance_table[rownames(Abundance_table) %in% Eukaryotic_vOTUs,]
+Abundance_table_prok <- Abundance_table[rownames(Abundance_table) %in% Prokaryotic_vOTUs,]
+
+# Estimate richness and alpha diversity for prokaryotic and eukaryotic viruses separately
+Sample_metadata$richness_euk  <-specnumber(t(Abundance_table_euk))                 
+Sample_metadata$shannon_euk <- vegan::diversity(t(Abundance_table_euk), index = "shannon") 
+Sample_metadata$richness_prok  <-specnumber(t(Abundance_table_prok))                 
+Sample_metadata$shannon_prok <- vegan::diversity(t(Abundance_table_prok), index = "shannon") 
+
+# Test significance: different in mothers vs babies
+# A) Richness
+MM_type_richness_euk <- lmer(richness_euk ~ Type + DNA_concentration_ng_ul + read_depth + (1|CS_BABY_BIOME_ID), REML = F, data = Sample_metadata)
+summary(MM_type_richness_euk)
+MM_type_richness_prok <- lmer(richness_prok ~ Type + DNA_concentration_ng_ul + read_depth + (1|CS_BABY_BIOME_ID), REML = F, data = Sample_metadata)
+summary(MM_type_richness_prok)
+
+# B) Shannon Index
+MM_type_shannon_euk <- lmer(shannon_euk ~ Type + DNA_concentration_ng_ul + read_depth + (1|CS_BABY_BIOME_ID), REML = F, data = Sample_metadata)
+summary(MM_type_shannon_euk) 
+MM_type_shannon_prok <- lmer(shannon_prok ~ Type + DNA_concentration_ng_ul + read_depth + (1|CS_BABY_BIOME_ID), REML = F, data = Sample_metadata)
+summary(MM_type_shannon_prok) 
+
+# Plot the richness and diversity in mothers and babies fo euk and prok viruses
+pdf('2_DIVERSITY/Plots/Shannon_Index_comp_euk.pdf', width=2.5, height=3.2)
+ggplot(Sample_metadata[!is.na(Sample_metadata$Timepoint_categorical),], aes(x=Type, y=shannon_euk)) +
+  geom_violin(aes(fill=Type), alpha=0.5, width=0.8, trim = F) +
+  geom_jitter(aes(color=Type), alpha=0.7) +  
+  geom_boxplot(width=0.2, fill="white", color="black") + 
+  labs(x = 'Sample type', y = 'Shannon Index') + 
+  scale_fill_manual(values=c("#008080", "#4B0082")) +  
+  scale_color_manual(values=c("#008080", "#4B0082")) +  
+  theme_classic() +
+  theme(
+    plot.title = element_text(size=18, hjust = 0.5, face="bold"), 
+    axis.text = element_text(size=14),
+    axis.title = element_text(size=15), 
+    axis.title.y = element_text(margin = margin(r = 10)),
+    axis.title.x = element_text(margin = margin(t = 10)),
+    legend.position = "none" 
+  )
+dev.off()
+
+pdf('2_DIVERSITY/Plots/Richness_comp_euk.pdf', width=2.7, height=3.2)
+ggplot(Sample_metadata[!is.na(Sample_metadata$Timepoint_categorical),], aes(x=Type, y=richness_euk)) +
+  geom_violin(aes(fill=Type), alpha=0.5, width=0.8, trim = F) +
+  geom_jitter(aes(color=Type), alpha=0.7) +  
+  geom_boxplot(width=0.2, fill="white", color="black") + 
+  labs(x = 'Sample type', y = 'Eukaryotic viral richness') + 
+  scale_fill_manual(values=c("#008080", "#4B0082")) + 
+  scale_color_manual(values=c("#008080", "#4B0082")) + 
+  scale_y_continuous(breaks = c(1, 3, 5)) +
+  theme_classic() + 
+  theme(plot.title = element_text(size=18, hjust = 0.5, face="bold"), 
+        axis.text = element_text(size=14),
+        axis.title = element_text(size=15), 
+        axis.title.y = element_text(margin = margin(r = 10)),
+        axis.title.x = element_text(margin = margin(t = 10)),
+        legend.position = "none") 
+dev.off()
+
+pdf('2_DIVERSITY/Plots/Shannon_Index_comp_prok.pdf', width=2.5, height=3.2)
+ggplot(Sample_metadata[!is.na(Sample_metadata$Timepoint_categorical),], aes(x=Type, y=shannon_prok)) +
+  geom_violin(aes(fill=Type), alpha=0.5, width=0.8, trim = F) +
+  geom_jitter(aes(color=Type), alpha=0.7) +  
+  geom_boxplot(width=0.2, fill="white", color="black") + 
+  labs(x = 'Sample type', y = 'Shannon Index') + 
+  scale_fill_manual(values=c("#008080", "#4B0082")) +  
+  scale_color_manual(values=c("#008080", "#4B0082")) +  
+  theme_classic() +
+  theme(
+    plot.title = element_text(size=18, hjust = 0.5, face="bold"), 
+    axis.text = element_text(size=14),
+    axis.title = element_text(size=15), 
+    axis.title.y = element_text(margin = margin(r = 10)),
+    axis.title.x = element_text(margin = margin(t = 10)),
+    legend.position = "none" 
+  )
+dev.off()
+
+pdf('2_DIVERSITY/Plots/Richness_comp_prok.pdf', width=2.9, height=3.2)
+ggplot(Sample_metadata[!is.na(Sample_metadata$Timepoint_categorical),], aes(x=Type, y=richness_prok)) +
+  geom_violin(aes(fill=Type), alpha=0.5, width=0.8, trim = F) +
+  geom_jitter(aes(color=Type), alpha=0.7) +  
+  geom_boxplot(width=0.2, fill="white", color="black") + 
+  labs(x = 'Sample type', y = 'Viral Richness') + 
+  scale_fill_manual(values=c("#008080", "#4B0082")) + 
+  scale_color_manual(values=c("#008080", "#4B0082")) + 
+  theme_classic() + 
+  theme(plot.title = element_text(size=18, hjust = 0.5, face="bold"), 
+        axis.text = element_text(size=14),
+        axis.title = element_text(size=15), 
+        axis.title.y = element_text(margin = margin(r = 10)),
+        axis.title.x = element_text(margin = margin(t = 10)),
+        legend.position = "none") 
+dev.off()
 
 ##################################
 # 2.2. Overall Beta diversity analysis (Mothers and Infants)
@@ -241,7 +343,7 @@ data.scores_all <- data.scores_all %>%
 outliers <- Sample_metadata$bioSampleId[which(!Sample_metadata$read_depth %in% data.scores_all$read_depth)]
 
 # Generate NMDS plot with maternal (blue) and infant (green) samples
-pdf('2_DIVERSITY/Plots/Viral_vOTUs_ALL_Bray_NMDS_without_outliers.pdf', width=5.5, height=4)
+pdf('2_DIVERSITY/Plots/Viral_vOTUs_ALL_Bray_NMDS_without_outliers.pdf', width=4.7, height=4)
 NMDS_plot_all <- ggplot(data = data.scores_all, aes(x = NMDS1, y = NMDS2, color=Type)) + 
   geom_point(size = 1.5, alpha=0.7) + 
   geom_point(data=centroids_all, aes(fill=Type),shape=NA, size=4, color='black') + 
@@ -416,7 +518,7 @@ data.scores_infants <- data.scores_infants %>%
   ungroup()
 
 # Generate NMDS plot
-pdf('2_DIVERSITY/Plots/Viral_vOTU_INFANTS_Bray_NMDS.pdf', width=3.6, height=3.7)
+pdf('2_DIVERSITY/Plots/Viral_vOTU_INFANTS_CLR_NMDS.pdf', width=3.6, height=3.7)
 NMDS_plot_infants <- ggplot(data = data.scores_infants, aes(x = NMDS1, y = NMDS2, color=Timepoint_categorical)) + 
   geom_point(size = 1.5, alpha=0.7) + 
   geom_point(data=centroids_infants, aes(fill=Timepoint_categorical), shape=NA, size=4, color='black') + 
@@ -564,71 +666,134 @@ ggplot(persistency, aes(x = Timepoint, y = Proportion, fill = Timepoint)) +
 dev.off()
 
 ##################################
-# 4.2 DGR analysis
+# 4.1.1 Specificity analysis by genus, family (clusters) and bacterial host
 ##################################
 
-# First, subselect only phages present in infants (W01-W06) and mothers
-Virus_metadata_infants <- Virus_metadata[Virus_metadata$Virus_ID %in% rownames(Abundance_table_infants),]
-Virus_metadata_mothers <- Virus_metadata[Virus_metadata$Virus_ID %in% rownames(Abundance_table_mothers),]
-Virus_metadata$Origin <- ifelse(Virus_metadata$Virus_ID %in% Virus_metadata_infants$Virus_ID & 
-                                  Virus_metadata$Virus_ID %in%  Virus_metadata_mothers$Virus_ID, "Both",
-                                ifelse(Virus_metadata$Virus_ID %in% Virus_metadata_infants$Virus_ID, "Infant", "Maternal"))
+###############
+# Genus-clusters
+###############
+# Generate viral abundance tables grouped by genus clusters and bacterial host
+Genus_cluster_abundance <- data.frame(matrix(0, 
+                                             nrow = length(unique(Virus_metadata$Genus_cluster)), 
+                                             ncol = ncol(Abundance_table_infants)))
+rownames(Genus_cluster_abundance) <- unique(Virus_metadata$Genus_cluster)
+colnames(Genus_cluster_abundance) <- colnames(Abundance_table_infants)
 
-# Compare proportion of infant (W1-W6) and maternal vOTUs with DGRs
-contingency_table <- table(Virus_metadata$DGR, Virus_metadata$Origin)
-proportions <- prop.table(contingency_table, margin = 2)
+# Aggregate abundances by genus cluster
+for (row in 1:nrow(Abundance_table_infants)) {
+  vOTU_name <- rownames(Abundance_table_infants)[row]
+  genus_cluster <- Virus_metadata$Genus_cluster[Virus_metadata$Virus_ID == vOTU_name]
+  
+  if (!is.na(genus_cluster)) {
+    Genus_cluster_abundance[genus_cluster, ] <- Genus_cluster_abundance[genus_cluster, ] + Abundance_table_infants[row, ]
+  }
+}
 
-# Perform chi-squared test (we now have a 2x3 table)
-chi_squared_test_result <- chisq.test(contingency_table)
+# Estimate number of genus clusters present in at least 2 individuals
+Genus_clusters_multiple_infants <- c()
+Genus_clusters_single_infant <- c()
+
+for (row in 1:nrow(Genus_cluster_abundance)) {
+  # Get genus cluster name
+  genus_cluster_name <- rownames(Genus_cluster_abundance)[row]
+  # Identify samples where this genus cluster is present
+  samples_present <- colnames(Genus_cluster_abundance)[which(Genus_cluster_abundance[row, ] != 0)]
+  # Get corresponding infant IDs
+  CS_ID_present <- Sample_metadata$CS_BABY_BIOME_ID[Sample_metadata$NG_ID %in% samples_present]
+  # Categorize genus clusters based on presence in multiple or single infants
+  if (sum(table(CS_ID_present) >= 1) >= 2) {
+    Genus_clusters_multiple_infants <- c(Genus_clusters_multiple_infants, genus_cluster_name)
+  } 
+  if (sum(table(CS_ID_present) >= 1) == 1) {
+    Genus_clusters_single_infant <- c(Genus_clusters_single_infant, genus_cluster_name)
+  } 
+}
+
+###############
+# Family-clusters
+###############
+# Generate viral abundance tables grouped by genus and family clusters and bacterial host
+Family_cluster_abundance <- data.frame(matrix(0, 
+                                              nrow = length(unique(Virus_metadata$Family_cluster)), 
+                                              ncol = ncol(Abundance_table_infants)))
+rownames(Family_cluster_abundance) <- unique(Virus_metadata$Family_cluster)
+colnames(Family_cluster_abundance) <- colnames(Abundance_table_infants)
+
+# Aggregate abundances by family cluster
+for (row in 1:nrow(Abundance_table_infants)) {
+  vOTU_name <- rownames(Abundance_table_infants)[row]
+  family_cluster <- Virus_metadata$Family_cluster[Virus_metadata$Virus_ID == vOTU_name]
+  
+  if (!is.na(family_cluster)) {
+    Family_cluster_abundance[family_cluster, ] <- Family_cluster_abundance[family_cluster, ] + Abundance_table_infants[row, ]
+  }
+}
+
+# Estimate number of family clusters present in at least 2 individuals
+Family_clusters_multiple_infants <- c()
+Family_clusters_single_infant <- c()
+
+for (row in 1:nrow(Family_cluster_abundance)) {
+  # Get family cluster name
+  family_cluster_name <- rownames(Family_cluster_abundance)[row]
+  # Identify samples where this family cluster is present
+  samples_present <- colnames(Family_cluster_abundance)[which(Family_cluster_abundance[row, ] != 0)]
+  # Get corresponding infant IDs
+  CS_ID_present <- Sample_metadata$CS_BABY_BIOME_ID[Sample_metadata$NG_ID %in% samples_present]
+  # Categorize family clusters based on presence in multiple or single infants
+  if (sum(table(CS_ID_present) >= 1) >= 2) {
+    Family_clusters_multiple_infants <- c(Family_clusters_multiple_infants, family_cluster_name)
+  } 
+  if (sum(table(CS_ID_present) >= 1) == 1) {
+    Family_clusters_single_infant <- c(Family_clusters_single_infant, family_cluster_name)
+  } 
+}
+
+###############
+# Bacterial host (genus)
+###############
+# Remove NAs from Virus_metadata$Bacterial_genus_host
+unique_bacterial_hosts <- na.omit(unique(Virus_metadata$Bacterial_genus_host))
+
+# Generate viral abundance table grouped by bacterial host
+Bacterial_host_abundance <- data.frame(matrix(0, 
+                                              nrow = length(unique_bacterial_hosts), 
+                                              ncol = ncol(Abundance_table_infants)))
+rownames(Bacterial_host_abundance) <- unique_bacterial_hosts
+colnames(Bacterial_host_abundance) <- colnames(Abundance_table_infants)
+
+# Aggregate abundances by bacterial host
+for (row in 1:nrow(Abundance_table_infants)) {
+  vOTU_name <- rownames(Abundance_table_infants)[row]
+  bacterial_host <- Virus_metadata$Bacterial_genus_host[Virus_metadata$Virus_ID == vOTU_name]
+  
+  # Ensure that the bacterial host is not NA
+  if (!is.na(bacterial_host)) {
+    Bacterial_host_abundance[bacterial_host, ] <- Bacterial_host_abundance[bacterial_host, ] + Abundance_table_infants[row, ]
+  }
+}
+
+# Estimate number of bacterial hosts present in at least 2 individuals
+Bacterial_hosts_multiple_infants <- c()
+Bacterial_hosts_single_infant <- c()
+
+for (row in 1:nrow(Bacterial_host_abundance)) {
+  bacterial_host_name <- rownames(Bacterial_host_abundance)[row]
+  samples_present <- colnames(Bacterial_host_abundance)[which(Bacterial_host_abundance[row, ] != 0)]
+  CS_ID_present <- Sample_metadata$CS_BABY_BIOME_ID[Sample_metadata$NG_ID %in% samples_present]
+  
+  # Categorize bacterial hosts based on presence in multiple or single infants
+  if (sum(table(CS_ID_present) >= 1) >= 2) {
+    Bacterial_hosts_multiple_infants <- c(Bacterial_hosts_multiple_infants, bacterial_host_name)
+  } 
+  if (sum(table(CS_ID_present) >= 1) == 1) {
+    Bacterial_hosts_single_infant <- c(Bacterial_hosts_single_infant, bacterial_host_name)
+  } 
+}
 
 
-# Plot of DGR frequency in mothers and infants
-contingency_table_plot <- contingency_table[, -1] # Remove the "Both" column
-contingency_table_plot[, "Infant"] <- contingency_table_plot[, "Infant"] + contingency_table[, "Both"]
-contingency_table_plot[, "Maternal"] <- contingency_table_plot[, "Maternal"] + contingency_table[, "Both"]
-prop_table_plot <- prop.table(contingency_table_plot, margin = 1)  
-
-# Convert to data frame for ggplot
-DGR_origin_ggplot <- as.data.frame.matrix(prop_table_plot)
-DGR_origin_ggplot$Type <- colnames(DGR_origin_ggplot)
-DGR_origin_ggplot$DGR <- rownames(DGR_origin_ggplot)
-DGR_origin_ggplot<- DGR_origin_ggplot %>%
-  pivot_longer(cols = c("Infant", "Maternal"), 
-               names_to = "Group", 
-               values_to = "Proportion")
-
-
-pdf('2_DIVERSITY/Plots/DGRs_mother_infant.pdf', width=4.2, height=3.2)
-ggplot(DGR_origin_ggplot, aes(x = DGR, y = Proportion, fill = Group)) +
-  geom_bar(stat = "identity", position = "stack") +
-  labs(x = "DGR Presence", y = "Proportion", fill = "Origin") +
-  scale_fill_manual(name = "Origin", values = c(alpha("#008080", 0.7),alpha("#4B0082", 0.8))) +
-  theme_classic() +
-  theme(
-    plot.title = element_text(size = 18, hjust = 0.5, face = "bold"),
-    axis.text = element_text(size = 14),
-    axis.title = element_text(size = 15),
-    legend.title = element_text(size = 15),
-    legend.text = element_text(size = 14),
-    axis.title.y = element_text(margin = margin(r = 10)),
-    axis.title.x = element_text(margin = margin(t = 10))
-  )
-dev.off()
-
-
-# Then, check if persistent or highly-persistent vOTUs are more likely to have DGRs
-
-# Generate a contingency table 
-contingency_table_persist <- table(Virus_metadata_infants$DGR, Virus_metadata_infants$Persistent)
-contingency_table_high_persist <- table(Virus_metadata_infants$DGR, Virus_metadata_infants$Highly_persistent)
-
-# Perform Fisher's exact test
-fisher_test_result_persist <- fisher.test(contingency_table_persist)
-fisher_test_result_high_persist <- fisher.test(contingency_table_high_persist)
-                                  
-                                  
 ##################################
-# 4.3 Intra vs Interindividual distance comparison
+# 4.2 Intra vs Interindividual distance comparison
 ##################################
 
 my_pseudocount_normal <- min(Abundance_table_infants[Abundance_table_infants!=0])/2

@@ -50,11 +50,11 @@ Kruskal_wallis_dunn_test <- function(response, group) {
 # 1. Load metadata table for the 195 CS Baby Biome samples 
 #*************************************************************************
 # Load the metadata table 
-Sample_metadata <- read.delim("../Metadata_CS/Metadata_EGA_CS_BABY_BIOME.txt") 
+Sample_metadata <- read.delim("../VIRUSES/Metadata_CS/Metadata_EGA_CS_BABY_BIOME.txt") 
 
 # Update clean read numbers
 Sample_metadata$NG_ID <- Sample_metadata$bioSampleId
-Clean_reads <- read.delim("../Metadata_CS/CS_Baby_Biome_nreads_195.txt", header = T) 
+Clean_reads <- read.delim("../VIRUSES/Metadata_CS/CS_Baby_Biome_nreads_195.txt", header = T) 
 Sample_metadata$read_depth <- Clean_reads$clean_reads
 
 # Add variable to distinguish between maternal and infant samples
@@ -190,7 +190,6 @@ wilcox_test_topology_prevalence <- wilcox.test(Prevalence ~ topology_simple,
 test_mobility_abundance <- Kruskal_wallis_dunn_test(Plasmid_metadata$Mean_abundance, Plasmid_metadata$Mobility)
 test_mobility_prevalence <- Kruskal_wallis_dunn_test(Plasmid_metadata$Prevalence, Plasmid_metadata$Mobility)
 
-
 ##************************************************************************
 # 5. Calculation of summary statistics of plasmids
 #*************************************************************************
@@ -240,6 +239,40 @@ Mobility_waffle <- waffle(Mobility_prop,legend_pos = "bottom", size = 1, colors 
 
 pdf('1_GENERAL_STATS/PLOTS/Stats_plasmids.pdf', width=3, height=5)
 iron (Circularity_waffle,Mobility_waffle)
+dev.off()
+
+# Plot also as bar charts
+circularity_data <- data.frame(
+  Category = c("Circular", "Linear"),
+  Proportion = c(37, 63)
+)
+mobility_data <- data.frame(
+  Category = c("Non-mobilizable", "Mobilizable", "Conjugative"),
+  Proportion = c(53, 40, 7)
+)
+
+pdf('2_DIVERSITY/Plots/vOTU_circularity.pdf', width=2.6, height=1.9)
+ggplot(circularity_data, aes(x = "", y = Proportion, fill = Category)) +
+  geom_bar(stat = "identity", size = 0.6, color = "black")  + 
+  coord_polar(theta = "y") +  
+  scale_fill_manual(values = c("#5FA4DA", "#6BBFA4")) + 
+  labs(x = NULL, y = NULL, fill = "Circularity") +
+  theme_void() +  
+  theme(legend.title = element_blank(),
+        legend.text = element_text(size = 12),
+        legend.position = "top")
+dev.off()
+
+pdf('2_DIVERSITY/Plots/vOTU_mobility.pdf', width=2.6, height=1.9)
+ggplot(mobility_data, aes(x = "", y = Proportion, fill = Category)) +
+  geom_bar(stat = "identity", size = 0.6, color = "black")  +
+  coord_polar(theta = "y") +  
+  scale_fill_manual(values = c("#FC4E2A", "#FFEDA0", "#FEB24C")) + 
+  labs(x = NULL, y = NULL, fill = "Mobility") + 
+  theme_void() + 
+  theme(legend.title = element_blank(),
+        legend.text = element_text(size = 12),
+        legend.position = "top")
 dev.off()
 
 #############################

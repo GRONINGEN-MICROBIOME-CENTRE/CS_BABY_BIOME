@@ -1,7 +1,7 @@
 ################################################################################
 ##### CS Baby Biome: Plasmid Diversity analysis
 ### Author(s): Asier Fernández-Pato
-### Last updated: 25th July, 2024
+### Last updated: 24th February, 2025
 ################################################################################
 
 #****************
@@ -18,6 +18,8 @@ library(ggExtra)
 library(ggpubr)
 library(reshape2)
 library(tidyr)
+library(nnet)
+
 
 #****************
 # Define functions
@@ -452,6 +454,28 @@ ggplot(persistency, aes(x = Timepoint, y = Proportion, fill = Timepoint)) +
         legend.position = "top")
 dev.off()
 
+
+##################################
+# 4.2. Association of persistance with plasmid traits
+##################################
+
+Plasmid_metadata_infants <- Plasmid_metadata_infants[,c("Plasmid_ID", "Persistent", "Mobility", "topology_simple")]
+
+Plasmid_abundance_infants$mean_abundance <- rowMeans(Plasmid_abundance_infants, na.rm = TRUE)
+Plasmid_abundance_infants$Plasmid_ID <- rownames(Plasmid_abundance_infants)
+Plasmid_abundance_infants <- Plasmid_abundance_infants[,c("Plasmid_ID", "mean_abundance")]
+data_merged <- merge(Plasmid_metadata_infants, Plasmid_abundance_infants, by = "Plasmid_ID")
+data_merged$Persistent_binary <- ifelse(data_merged$Persistent == "Yes", 1, 0)
+
+# Fit logistic regression models
+model_mob <- multinom(Persistent ~ Mobility + mean_abundance, data = data_merged)
+summary(model_mob)
+z_values <- coef(model_mob) / summary(model_mob)$coefficients[, "Std. Error"]
+p_values <- 2 * pnorm(-abs(z_values))
+p_values
+
+model_circ <- glm(Persistent_binary ~ topology_simple + mean_abundance, data = data_merged, family = binomial)
+summary(model_circ)
 
 #****************
 # Save output

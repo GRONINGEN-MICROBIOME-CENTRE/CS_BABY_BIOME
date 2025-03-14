@@ -754,7 +754,7 @@ transmitted_plasmids <- left_join(transmitted_plasmids, AMR_data, by = "Plasmid_
 
 # Functional enrichment analysis
 # Load functional analysis results (BAKTA)
-Functional_annotation_PTUs <- read.delim("PLASMIDS/6_FUNCTIONAL_ANNOTATION/bakta_annotations_all_plasmids_merged.tsv")
+Functional_annotation_PTUs <- read.delim("PLASMIDS/6B_FUNCTIONAL_ANNOTATION/bakta_annotations_all_plasmids_merged.tsv")
 colnames(Functional_annotation_PTUs)[1] <- "Plasmid_ID"
 Functional_annotation_transmitted_PTUs <- Functional_annotation_PTUs[Functional_annotation_PTUs$Plasmid_ID %in%
                                                                        transmitted_plasmids$Plasmid_ID,] 

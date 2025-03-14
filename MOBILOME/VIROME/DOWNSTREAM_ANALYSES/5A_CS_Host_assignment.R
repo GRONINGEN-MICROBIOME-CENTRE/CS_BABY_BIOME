@@ -27,7 +27,7 @@ Virus_metadata <- read.delim("Metadata_CS/CS_Baby_Biome_Viral_Metadata_17052024.
 ##************************************************************************
 
 #A) Read iPHOP prediction output at genus level with default DB
-viral_hosts_df <- read.delim("6_HOST_ASSIGNMENT/Host_prediction_to_genus_m90_default_db.csv", 
+viral_hosts_df <- read.delim("5_HOST_ASSIGNMENT/Host_prediction_to_genus_m90_default_db.csv", 
                                 sep = ",", header = T)
 
 # Filter iPHOP predictions to get only the top hit per virus
@@ -39,7 +39,7 @@ viral_hosts_df <- viral_hosts_df[,c(1,3,4)]
 colnames(viral_hosts_df) <- c("Virus_ID", "Bacterial_host", "Score") #predictions for 2092/2263 viruses (92.4%)
 
 #B) Read iPHOP prediction output at genus level with enriched DB
-viral_hosts_enr <- read.delim("6_HOST_ASSIGNMENT/Host_prediction_to_genus_m90_enriched_db.csv", 
+viral_hosts_enr <- read.delim("5_HOST_ASSIGNMENT/Host_prediction_to_genus_m90_enriched_db.csv", 
                           sep = ",", header = T)
 
 # Filter iPHOP predictions to get only the top hit per virus
@@ -181,6 +181,9 @@ genus_colors <- adjustcolor(genus_colors, alpha.f = 0.6)
 genus_names <- unique(Viral_genus_host_counts_infants$Bacterial_genus_host)
 color_mapping <- setNames(genus_colors, genus_names)
 
+geom_bar_pattern(stat = "identity", width = 0.7, pattern = "stripe", pattern_color = "#707070", pattern_fill = "#707070", 
+                 pattern_density = 0.2, pattern_angle = 30, color = "#707070") +
+  scale_fill_manual(values = rep("#D3D3D3", length(unique(family_sharing_per_timepoint$Timepoint_categorical)))) +  
 
 pdf('6_HOST_ASSIGNMENT/Plots/Genus_host_barplot_infants.pdf', width=4.5, height=3.1)
 ggplot(Viral_genus_host_counts_infants, aes(x = reorder(Bacterial_genus_host, -n), y = n)) +
@@ -294,5 +297,5 @@ dev.off()
 # Save output
 #**************
 # Save virus metadata
-write.table(Virus_metadata, "Metadata_CS/CS_Baby_Biome_Viral_Metadata_17052024.txt", sep = "\t", row.names = F, quote = FALSE)
+write.table(Virus_metadata, "Metadata_CS/Z_CS_Viral_Metadata.tsv", sep = "\t", row.names = F, quote = FALSE)
 

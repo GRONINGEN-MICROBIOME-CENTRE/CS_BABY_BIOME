@@ -226,6 +226,16 @@ ggplot(proportions_df, aes(x = Mobility, y = Proportion, fill = AMR_genes_binary
   scale_y_continuous(labels = scales::percent)
 dev.off()
 
+# Estimate the ARG density per PTU (ARG per kilobase of plasmid genome)
+Plasmid_metadata_infants$AMR_density <- Plasmid_metadata_infants$AMR_genes / Plasmid_metadata_infants$length
+Plasmid_metadata_infants$Mobility <- factor(Plasmid_metadata_infants$Mobility)
+
+# Association between AMR density and plasmid mobility
+kruskal_test <- kruskal.test(AMR_density ~ Mobility, data = Plasmid_metadata_infants)
+kruskal_test
+dunn_result <- dunn.test(Plasmid_metadata_infants$AMR_density, Plasmid_metadata_infants$Mobility)
+dunn_result$P.adjusted <- p.adjust(dunn_result$P, method = "fdr")
+
 # Generate violin plot: vOTU vs PTU ARM gene content
 Virus_metadata_infants <- read.delim("../VIRUSES/Metadata_CS/CS_Baby_Biome_Viral_Metadata_17052024.txt")
 Virus_metadata_infants$AMR_gene_proportion <- 100*(Virus_metadata_infants$AMR_genes / Virus_metadata_infants$n_genes)
@@ -238,7 +248,6 @@ combined_data <- rbind(
   data.frame(Source = "Virus", AMR_gene_proportion = Virus_metadata_infants$AMR_gene_proportion),
   data.frame(Source = "Plasmid", AMR_gene_proportion = Plasmid_metadata_infants$AMR_gene_proportion)
 )
-
 
 pdf('5_AMR_ANALYSIS/PLOTS/AMR_vOTU_PTU.pdf', width=3.2, height=3.2)
 ggplot(combined_data, aes(x = Source, y = AMR_gene_proportion, fill = Source)) +
