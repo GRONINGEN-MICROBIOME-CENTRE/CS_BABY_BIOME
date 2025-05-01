@@ -29,7 +29,7 @@ genomad end-to-end \
     ${sample_dir}/${SAMPLE_ID}_metaspades_scaffolds.fa \
     ${sample_dir}/${SAMPLE_ID}/virome_discovery/geNomad_results \
     --cleanup \
-	  --threads ${SLURM_CPUS_PER_TASK} \
+    --threads ${SLURM_CPUS_PER_TASK} \
     /scratch/hb-llnext/databases/geNomad_db/
 
 # Remove intermediate files
