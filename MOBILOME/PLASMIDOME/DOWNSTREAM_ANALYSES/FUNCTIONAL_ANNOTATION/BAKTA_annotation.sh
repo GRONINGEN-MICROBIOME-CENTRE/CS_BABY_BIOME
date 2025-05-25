@@ -14,7 +14,7 @@ output_dir=$2 #output directory
 module purge; ml Anaconda3; module list
 source activate /scratch/hb-llnext/conda_envs/bakta_env/; conda list 
 
-# Run Prodigal-gv (paralellized)
+# Run BAKTA
 bakta $plasmid_genomes \
 	-d /scratch/hb-llnext/databases/bakta_db/db \
 	-o $output_dir \
